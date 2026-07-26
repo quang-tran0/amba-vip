@@ -60,11 +60,12 @@ run:
 	mv $(TESTNAME)_$(SEED).log ./log
 	cp -f vsim.wlf log/$(TESTNAME)_$(SEED).wlf
 	ln -sfn ./log/$(TESTNAME)_$(SEED).log run.log
+	! grep -q "TEST FAILED" ./log/$(TESTNAME)_$(SEED).log
 	grep -q "TEST PASSED" ./log/$(TESTNAME)_$(SEED).log
 
 vlib:
 	mkdir -p log
-	vlib work
+	@test -d work || vlib work
 	vmap work work
 
 wave:

@@ -10,7 +10,9 @@ package test_pkg;
 
   `include "apb_base_test.sv"
   `include "apb_smoke_test.sv"
+  `include "apb_write_test.sv"
+  `include "apb_read_test.sv"
+  `include "apb_random_test.sv"
 endpackage : test_pkg
 
 `endif
-

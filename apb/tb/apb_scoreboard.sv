@@ -13,9 +13,46 @@ class apb_scoreboard extends uvm_scoreboard;
   int unsigned compared_count;
   int unsigned mismatch_count;
 
+  bit          sampled_write;
+  bit [31:0]   sampled_addr;
+  bit          sampled_slverr;
+  int unsigned sampled_wait_cycles;
+  bit          sampled_back_to_back;
+
+  covergroup apb_access_cg;
+    option.per_instance = 1;
+
+    direction_cp: coverpoint sampled_write {
+      bins read  = {0};
+      bins write = {1};
+    }
+    address_cp: coverpoint sampled_addr {
+      bins ctrl       = {32'h0000_0000};
+      bins status     = {32'h0000_0004};
+      bins data_reg   = {32'h0000_0008};
+      bins config_reg = {32'h0000_000c};
+      bins invalid    = default;
+    }
+    error_cp: coverpoint sampled_slverr {
+      bins okay  = {0};
+      bins error = {1};
+    }
+    wait_cp: coverpoint sampled_wait_cycles {
+      bins zero = {0};
+      bins one  = {1};
+      bins many = {[2:$]};
+    }
+    back_to_back_cp: coverpoint sampled_back_to_back {
+      bins isolated = {0};
+      bins adjacent = {1};
+    }
+    address_direction_cross: cross address_cp, direction_cp;
+  endgroup
+
   function new(string name, uvm_component parent);
     super.new(name, parent);
     actual_imp = new("actual_imp", this);
+    apb_access_cg = new();
   endfunction
 
   function void build_phase(uvm_phase phase);
@@ -51,6 +88,12 @@ class apb_scoreboard extends uvm_scoreboard;
 
     observed_count++;
     checked_count++;
+    sampled_write        = item.write;
+    sampled_addr         = item.addr;
+    sampled_slverr       = item.slverr;
+    sampled_wait_cycles  = item.wait_cycles;
+    sampled_back_to_back = item.back_to_back;
+    apb_access_cg.sample();
     expected_error = !address_is_valid(item.addr);
 
     if (item.slverr != expected_error) begin
@@ -90,8 +133,8 @@ class apb_scoreboard extends uvm_scoreboard;
       `uvm_error("APB_ZERO_COMPARE", "Scoreboard compared no APB reads")
 
     `uvm_info("APB_SCOREBOARD", $sformatf(
-      "observed=%0d checked=%0d reads_compared=%0d mismatches=%0d",
-      observed_count, checked_count, compared_count, mismatch_count), UVM_NONE)
+      "observed=%0d checked=%0d reads_compared=%0d mismatches=%0d coverage=%0.1f%%",
+      observed_count, checked_count, compared_count, mismatch_count,
+      apb_access_cg.get_inst_coverage()), UVM_NONE)
   endfunction
 endclass
-
