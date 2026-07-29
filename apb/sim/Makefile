@@ -62,6 +62,7 @@ run:
 	ln -sfn ./log/$(TESTNAME)_$(SEED).log run.log
 	! grep -q "TEST FAILED" ./log/$(TESTNAME)_$(SEED).log
 	grep -q "TEST PASSED" ./log/$(TESTNAME)_$(SEED).log
+	grep -q "^# Errors: 0," ./log/$(TESTNAME)_$(SEED).log
 
 vlib:
 	mkdir -p log

@@ -17,6 +17,8 @@ class apb_environment extends uvm_env;
   function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     agent.monitor_ap.connect(scoreboard.actual_imp);
+    scoreboard.check_active_stimulus = (agent.cfg.is_active == UVM_ACTIVE);
+    if (scoreboard.check_active_stimulus)
+      agent.request_ap.connect(scoreboard.expected_imp);
   endfunction
 endclass
-

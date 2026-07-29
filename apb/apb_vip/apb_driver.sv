@@ -3,9 +3,13 @@ class apb_driver extends uvm_driver #(apb_transaction);
 
   apb_configuration cfg;
   virtual apb_if vif;
+  uvm_analysis_port #(apb_transaction) request_ap;
+  bit completed_previous_transfer;
+  time previous_completion_time;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
+    request_ap = new("request_ap", this);
   endfunction
 
   function void build_phase(uvm_phase phase);
@@ -19,10 +23,16 @@ class apb_driver extends uvm_driver #(apb_transaction);
 
   task run_phase(uvm_phase phase);
     drive_idle();
+    completed_previous_transfer = 1'b0;
+    previous_completion_time = 0;
     wait_for_reset_release();
 
     forever begin
       seq_item_port.get_next_item(req);
+      if (vif.driver_cb.PRESETn !== 1'b1) begin
+        completed_previous_transfer = 1'b0;
+        wait_for_reset_release();
+      end
       drive_transfer(req);
       seq_item_port.item_done();
     end
@@ -47,6 +57,8 @@ class apb_driver extends uvm_driver #(apb_transaction);
     item.rdata       = '0;
     item.slverr      = 1'b0;
     item.wait_cycles = 0;
+    item.back_to_back = completed_previous_transfer &&
+                        ($time == previous_completion_time);
 
     // SETUP starts immediately. If another item follows a completed access,
     // the idle assignments are overwritten in the same time step.
@@ -74,9 +86,12 @@ class apb_driver extends uvm_driver #(apb_transaction);
     if (!item.write)
       item.rdata = vif.driver_cb.PRDATA;
 
+    completed_previous_transfer = 1'b1;
+    previous_completion_time = $time;
+    request_ap.write(item);
+
     `uvm_info("APB_DRIVER", item.convert2string(), UVM_HIGH)
 
     drive_idle();
   endtask
 endclass
-

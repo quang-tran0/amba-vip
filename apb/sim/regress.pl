@@ -24,6 +24,7 @@ sub classify_log {
   return 'UNKNOWN' unless -f $path;
   my $text = slurp($path);
   return 'FAILED' if index($text, $fail_word) >= 0;
+  return 'FAILED' unless $text =~ /^# Errors:\s+0,/m;
   return 'PASSED' if index($text, $pass_word) >= 0;
   return 'UNKNOWN';
 }
@@ -38,6 +39,15 @@ sub write_report {
     printf {$report} "%-24s %-8s %-8s %s\n", @{$row};
   }
   close $report;
+}
+
+sub find_executable {
+  my ($name) = @_;
+  for my $directory (split /:/, ($ENV{PATH} // '')) {
+    my $path = "$directory/$name";
+    return $path if -f $path && -x $path;
+  }
+  return;
 }
 
 my $config = slurp($config_file);
@@ -69,6 +79,8 @@ if ($report_only) {
   die "No tests found in $config_file\n" unless @tests;
 
   my $cov_value = uc($cov);
+  my $timeout_program = find_executable('timeout')
+    or die "The timeout command is required for regression\n";
   system('make', 'clean') == 0 or die "make clean failed\n";
   system('make', 'build', "COV=$cov_value") == 0 or die "make build failed\n";
 
@@ -77,13 +89,15 @@ if ($report_only) {
     $run_opts =~ s/^\s+|\s+$//g;
     for (1 .. $runs) {
       my $seed = int(rand(900_000)) + 100_000;
-      my @command = ('timeout', $timeout, 'make', 'run',
+      my @command = ($timeout_program, $timeout, 'make', 'run',
                      "TESTNAME=$name", "SEED=$seed", "COV=$cov_value",
                      "RUNARG=$run_opts");
-      system(@command);
+      my $run_status = system(@command);
       my $path = "log/${name}_${seed}.log";
-      push @rows, [$name, $seed,
-                   classify_log($path, $pass_word, $fail_word), $path];
+      my $status = ($run_status == 0)
+        ? classify_log($path, $pass_word, $fail_word)
+        : 'FAILED';
+      push @rows, [$name, $seed, $status, $path];
     }
   }
 }

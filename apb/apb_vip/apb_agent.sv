@@ -6,10 +6,12 @@ class apb_agent extends uvm_agent;
   apb_driver driver;
   apb_monitor monitor;
   uvm_analysis_port #(apb_transaction) monitor_ap;
+  uvm_analysis_port #(apb_transaction) request_ap;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
     monitor_ap = new("monitor_ap", this);
+    request_ap = new("request_ap", this);
   endfunction
 
   function void build_phase(uvm_phase phase);
@@ -34,6 +36,7 @@ class apb_agent extends uvm_agent;
     monitor.analysis_port.connect(monitor_ap);
     if (cfg.is_active == UVM_ACTIVE)
       driver.seq_item_port.connect(sequencer.seq_item_export);
+    if (cfg.is_active == UVM_ACTIVE)
+      driver.request_ap.connect(request_ap);
   endfunction
 endclass
-
