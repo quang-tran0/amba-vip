@@ -7,6 +7,10 @@ package seq_pkg;
   `include "uvm_macros.svh"
 
   `include "ahb_smoke_sequence.sv"
+  `include "ahb_write_sequence.sv"
+  `include "ahb_read_sequence.sv"
+  `include "ahb_interconnect_sequence.sv"
+  `include "ahb_random_sequence.sv"
 endpackage : seq_pkg
 
 `endif

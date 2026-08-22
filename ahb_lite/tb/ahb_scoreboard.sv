@@ -222,7 +222,8 @@ class ahb_scoreboard extends uvm_scoreboard;
         if ((expected_items[index].write       != actual_items[index].write) ||
             (expected_items[index].addr        != actual_items[index].addr) ||
             (expected_items[index].size        != actual_items[index].size) ||
-            (expected_items[index].wdata       != actual_items[index].wdata) ||
+            (expected_items[index].write &&
+             (expected_items[index].wdata != actual_items[index].wdata)) ||
             (expected_items[index].resp        != actual_items[index].resp) ||
             (expected_items[index].wait_cycles != actual_items[index].wait_cycles) ||
             (!expected_items[index].write &&
