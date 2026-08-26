@@ -82,6 +82,45 @@ module ahb_interconnect (
     end
   end
 
+`ifndef SYNTHESIS
+  property p_slave_select_one_hot;
+    @(posedge HCLK) disable iff (!HRESETn)
+      !(HSEL0 && HSEL1);
+  endproperty
+
+  property p_data_select_stable_while_stalled;
+    @(posedge HCLK) disable iff (!HRESETn)
+      !HREADY |=> $stable(data_select_q);
+  endproperty
+
+  property p_bank0_response_selected;
+    @(posedge HCLK) disable iff (!HRESETn)
+      (data_select_q == SELECT_BANK0) |->
+        ((HRDATA === HRDATA0) && (HREADY === HREADYOUT0) &&
+         (HRESP === HRESP0));
+  endproperty
+
+  property p_bank1_response_selected;
+    @(posedge HCLK) disable iff (!HRESETn)
+      (data_select_q == SELECT_BANK1) |->
+        ((HRDATA === HRDATA1) && (HREADY === HREADYOUT1) &&
+         (HRESP === HRESP1));
+  endproperty
+
+  ahb_slave_select_one_hot:
+    assert property (p_slave_select_one_hot)
+    else $error("AHB slave selects are not mutually exclusive");
+  ahb_data_select_stable_while_stalled:
+    assert property (p_data_select_stable_while_stalled)
+    else $error("AHB data-phase selection changed during a stall");
+  ahb_bank0_response_selected:
+    assert property (p_bank0_response_selected)
+    else $error("AHB Bank0 response mux is incorrect");
+  ahb_bank1_response_selected:
+    assert property (p_bank1_response_selected)
+    else $error("AHB Bank1 response mux is incorrect");
+`endif
+
 endmodule
 
 `default_nettype wire
