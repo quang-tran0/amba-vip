@@ -80,11 +80,6 @@ module ahb_subsystem (
     .HRESP     (HRESP1)
   );
 
-  // HBURST is part of the master-facing interface. This first subsystem only
-  // supports SINGLE transfers; the interface assertions enforce that policy.
-  logic unused_hburst;
-  always_comb unused_hburst = ^HBURST;
-
 endmodule
 
 `default_nettype wire

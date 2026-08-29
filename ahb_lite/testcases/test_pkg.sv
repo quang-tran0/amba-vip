@@ -14,6 +14,7 @@ package test_pkg;
   `include "ahb_read_test.sv"
   `include "ahb_interconnect_test.sv"
   `include "ahb_random_test.sv"
+  `include "ahb_pipeline_test.sv"
 endpackage : test_pkg
 
 `endif

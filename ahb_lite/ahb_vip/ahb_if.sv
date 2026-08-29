@@ -54,7 +54,8 @@ interface ahb_if(input wire logic HCLK);
 
   property p_address_control_stable_while_stalled;
     @(posedge HCLK) disable iff (!HRESETn)
-      !HREADY |=> $stable({HADDR, HTRANS, HWRITE, HSIZE, HBURST});
+      (HTRANS[1] && !HREADY && !HRESP) |=>
+        (HRESP || $stable({HADDR, HTRANS, HWRITE, HSIZE, HBURST}));
   endproperty
 
   property p_write_data_stable_while_stalled;

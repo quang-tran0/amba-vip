@@ -31,7 +31,6 @@ module ahb_reg_bank #(
   logic        transfer_valid_q;
   logic [31:0] addr_q;
   logic        write_q;
-  logic [2:0]  size_q;
   logic        transfer_error_q;
   logic [WAIT_COUNT_WIDTH-1:0] wait_count_q;
   logic        error_second_q;
@@ -84,7 +83,6 @@ module ahb_reg_bank #(
       transfer_valid_q  <= 1'b0;
       addr_q            <= 32'h0000_0000;
       write_q           <= 1'b0;
-      size_q            <= 3'b010;
       transfer_error_q  <= 1'b0;
       wait_count_q      <= '0;
       error_second_q    <= 1'b0;
@@ -107,7 +105,6 @@ module ahb_reg_bank #(
         if (HSEL && HTRANS[1]) begin
           addr_q           <= HADDR;
           write_q          <= HWRITE;
-          size_q           <= HSIZE;
           transfer_error_q <= !request_is_valid(HADDR, HSIZE);
           wait_count_q     <= WAIT_STATES;
         end else begin
